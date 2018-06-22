@@ -6,9 +6,10 @@ import random
 import numpy as np
 import tensorflow as tf
 import tensorflow.python.platform
+import os
 
 # 識別ラベルの数(今回は3つ)
-NUM_CLASSES = 1
+NUM_CLASSES = 2
 # 学習する時の画像のサイズ(px)
 IMAGE_SIZE = 28
 # 画像の次元数(28px*28px*3(カラー))
@@ -24,9 +25,9 @@ flags.DEFINE_string('test', '/Users/matsunaga/Desktop/dev/workspace/python/tenso
 # TensorBoardのデータ保存先フォルダ
 flags.DEFINE_string('train_dir', '/Users/matsunaga/Desktop/dev/workspace/python/tensorflow/data', 'Directory to put the training data.')
 # 学習訓練の試行回数
-flags.DEFINE_integer('max_steps', 3, 'Number of steps to run trainer.')
+flags.DEFINE_integer('max_steps', 100, 'Number of steps to run trainer.')
 # 1回の学習で何枚の画像を使うか
-flags.DEFINE_integer('batch_size', 2, 'Batch size Must divide evenly into the dataset sizes.')
+flags.DEFINE_integer('batch_size', 3, 'Batch size Must divide evenly into the dataset sizes.')
 # 学習率、小さすぎると学習が進まないし、大きすぎても誤差が収束しなかったり発散したりしてダメとか。繊細
 flags.DEFINE_float('learning_rate', 1e-4, 'Initial learning rate.')
 
@@ -247,20 +248,19 @@ if __name__ == '__main__':
       print ("step %d, training accuracy %g"%(step, train_accuracy))
 
       # 1step終わるたびにTensorBoardに表示する値を追加する
-summary_str = sess.run(summary_op, feed_dict={
+  summary_str = sess.run(summary_op, feed_dict={
         images_placeholder: train_image,
         labels_placeholder: train_label,
         keep_prob: 1.0})
-summary_writer.add_summary(summary_str, step)
+  summary_writer.add_summary(summary_str, step)
 
   # 訓練が終了したらテストデータに対する精度を表示する
-print ("test accuracy %g"%sess.run(acc, feed_dict={
+  print ("test accuracy %g"%sess.run(acc, feed_dict={
     images_placeholder: test_image,
     labels_placeholder: test_label,
     keep_prob: 1.0}))
 
   # データを学習して最終的に出来上がったモデルを保存
   # "model.ckpt"は出力されるファイル名
-cwd = '/Users/matsunaga/Desktop/dev/workspace/python/tensorflow/'
-print(cwd)
-save_path = saver.save(sess, cwd + "//model.ckpt")
+  cwd = '/Users/matsunaga/Desktop/dev/workspace/python/tensorflow/'
+  save_path = saver.save(sess, cwd + "/model.ckpt")

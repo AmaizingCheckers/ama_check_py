@@ -13,11 +13,13 @@ class DBConnector :
         passwd=os.environ.get('MYSQL_PASSWORD'),
         host=os.environ.get('MYSQL_HOSTNAME'),
         port=int(os.environ.get('MYSQL_PORT')),
-        db=os.environ.get('MYSQL_DATABASE')
+        db=os.environ.get('MYSQL_DATABASE'),
+        charset=('utf8'),
       )
 
     return connector
 
   def db_disconnect (self, connector) :
-    connector.close
+    connector.commit()
+    connector.close()
 
