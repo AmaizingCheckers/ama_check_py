@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python 
 #! -*- coding: utf-8 -*-
 
 import sys
@@ -8,15 +8,20 @@ import tensorflow as tf
 import os
 import random
 import main
+import DBConnector
+from datetime import datetime
 
+dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+#print(dir)
 # OpenCVのデフォルトの顔の分類器のpath
-cascade_path = '/Users/matsunaga/Desktop/dev/workspace/python/haarcascade_frontalface_default.xml'
-faceCascade = cv2.CascadeClassifier(cascade_path)
-redsquare_path = "/Users/matsunaga/Desktop/dev/workspace/python/pickup_face/red_square"
-cutface_path = "/Users/matsunaga/Desktop/dev/workspace/python/pickup_face/cut_face"
+cascade_path    = dir + '\\haarcascade_frontalface_default.xml'
+faceCascade     = cv2.CascadeClassifier(cascade_path)
+redsquare_path  = dir + '\\pickup_face\\red_square'
+cutface_path    = dir + '\\pickup_face\\cut_face'
 # 識別ラベルと各ラベル番号に対応する名前
 HUMAN_NAMES = {
-  0: u"川田",
+  0: u"川田大秀",
+  1: u"マークザッカーバーグ"
 }
 
 #指定した画像(img_path)を学習結果(ckpt_path)を用いて判定する
@@ -93,7 +98,7 @@ def evaluation(img_path, ckpt_path):
 
   # 判定結果
   result = softmax[0]
-
+  
   # 判定結果を%にして四捨五入
   rates = [round(n * 100.0, 1) for n in result]
   humans = []
@@ -112,10 +117,61 @@ def evaluation(img_path, ckpt_path):
 
   # 結果をコンソールに出力
   print (rank)
+  #print (rank[0]['name'])
+  name2 = rank[0]['name']
+  # 結果をDBに挿入
+  student_id = []
+  history_id = []
+
+  #ヒストリーIDとサブジェクトIDの取得
+  dbConnector = DBConnector.DBConnector()
+  connector = dbConnector.db_connect()
+  cursor = connector.cursor()
+  cursor.execute('SELECT * from histories ')
+  for row in cursor.fetchall () :
+    subject_id = row[2]
+    history_id = row[0]
+
+  #一致するサブジェクトIDのstudent_idをリストで取ってくる
+  cursor.execute('SELECT * from subject_students ')
+  for row in cursor.fetchall () :
+    if subject_id == row[1]:
+      student_id.append(row[2])
+  #print (student_id)
+  #print (subject_id)
+  #print (history_id)
+  
+  #結果と一致する名前の行からstudent_idを取ってきて挿入
+  cursor.execute("SELECT * from students where name='%s'" % name2)
+  for row in cursor.fetchall () : 
+    #print(row)
+    n = 0
+    for i in student_id :
+      if student_id[n] == row[0] :
+        date = (datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        sql_insert = ("INSERT into history_students(history_id,student_id,created_at,updated_at) values (%s,%s,%s,%s)")
+        cursor.execute(sql_insert,(history_id,student_id[n],date,date))
+        #print("ok")
+        break
+      else:
+        n += 1
+        #print("miss")
+  cursor.close
+  dbConnector.db_disconnect(connector)
 
   # 判定結果と加工した画像のpathを返す
   return [rank, os.path.basename(img_path), random_str + '.jpg']
 
 # コマンドラインからのテスト用
 if __name__ == '__main__':
-  evaluation('/Users/matsunaga/Desktop/dev/workspace/python/test.png', '/Users/matsunaga/Desktop/dev/workspace/python/tensorflow/model.ckpt')
+  dbConnector = DBConnector.DBConnector()
+  connector = dbConnector.db_connect()
+  cursor = connector.cursor()
+  cursor.execute('SELECT * from histories WHERE timestamp ')
+  for row in cursor.fetchall () :
+    evaluation(dir + "\\" + str(row[5]), dir + "\\model.ckpt")
+  cursor.close
+  dbConnector.db_disconnect(connector)
+
+
+
