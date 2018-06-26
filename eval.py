@@ -19,21 +19,10 @@ faceCascade     = cv2.CascadeClassifier(cascade_path)
 redsquare_path  = dir + '\\pickup_face\\red_square'
 cutface_path    = dir + '\\pickup_face\\cut_face'
 # 識別ラベルと各ラベル番号に対応する名前
-student_name = []
-m = 0
-dbConnector = DBConnector.DBConnector()
-connector = dbConnector.db_connect()
-cursor = connector.cursor()
-cursor.execute('SELECT * from students')
-for row in cursor.fetchall () :
-  student_name.append(row[1])
-cursor.close
-dbConnector.db_disconnect(connector)
-
-HUMAN_NAMES = {}
-for i in range(len(student_name)):
-  HUMAN_NAMES[m] = student_name[m]
-  m += 1
+HUMAN_NAMES = {
+  0: u"川田大秀",
+  1: u"マークザッカーバーグ"
+}
 
 #指定した画像(img_path)を学習結果(ckpt_path)を用いて判定する
 def evaluation(img_path, ckpt_path):
