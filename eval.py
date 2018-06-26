@@ -19,10 +19,21 @@ faceCascade     = cv2.CascadeClassifier(cascade_path)
 redsquare_path  = dir + '\\pickup_face\\red_square'
 cutface_path    = dir + '\\pickup_face\\cut_face'
 # 識別ラベルと各ラベル番号に対応する名前
-HUMAN_NAMES = {
-  0: u"川田大秀",
-  1: u"マークザッカーバーグ"
-}
+student_name = []
+m = 0
+dbConnector = DBConnector.DBConnector()
+connector = dbConnector.db_connect()
+cursor = connector.cursor()
+cursor.execute('SELECT * from students')
+for row in cursor.fetchall () :
+  student_name.append(row[1])
+cursor.close
+dbConnector.db_disconnect(connector)
+
+HUMAN_NAMES = {}
+for i in range(len(student_name)):
+  HUMAN_NAMES[m] = student_name[m]
+  m += 1
 
 #指定した画像(img_path)を学習結果(ckpt_path)を用いて判定する
 def evaluation(img_path, ckpt_path):
@@ -119,6 +130,8 @@ def evaluation(img_path, ckpt_path):
   print (rank)
   #print (rank[0]['name'])
   name2 = rank[0]['name']
+
+
   # 結果をDBに挿入
   student_id = []
   history_id = []
@@ -127,13 +140,13 @@ def evaluation(img_path, ckpt_path):
   dbConnector = DBConnector.DBConnector()
   connector = dbConnector.db_connect()
   cursor = connector.cursor()
-  cursor.execute('SELECT * from histories ')
+  cursor.execute('SELECT * from histories')
   for row in cursor.fetchall () :
     subject_id = row[2]
     history_id = row[0]
 
   #一致するサブジェクトIDのstudent_idをリストで取ってくる
-  cursor.execute('SELECT * from subject_students ')
+  cursor.execute('SELECT * from subject_students')
   for row in cursor.fetchall () :
     if subject_id == row[1]:
       student_id.append(row[2])
@@ -167,7 +180,7 @@ if __name__ == '__main__':
   dbConnector = DBConnector.DBConnector()
   connector = dbConnector.db_connect()
   cursor = connector.cursor()
-  cursor.execute('SELECT * from histories WHERE timestamp ')
+  cursor.execute('SELECT * from histories WHERE timestamp=(select max(timestamp) from histories)')
   for row in cursor.fetchall () :
     evaluation(dir + "\\" + str(row[5]), dir + "\\model.ckpt")
   cursor.close
