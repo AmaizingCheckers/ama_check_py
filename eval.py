@@ -74,7 +74,7 @@ def evaluation(img_path, ckpt_path):
   else:
     # 顔が見つからなければ処理終了
     print ('image:No Face')
-    return
+    return False
     f.close()
     f = open(target_image_path, 'r')
 
@@ -173,7 +173,7 @@ def evaluation(img_path, ckpt_path):
   dbConnector.db_disconnect(connector)
 
   # 判定結果と加工した画像のpathを返す
-  return [rank, os.path.basename(img_path), random_str + '.jpg']
+  return True
 
 # コマンドラインからのテスト用
 if __name__ == '__main__':
