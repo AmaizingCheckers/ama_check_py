@@ -12,7 +12,8 @@ class DBConnector :
         user=os.environ.get('MYSQL_USER'),
         passwd=os.environ.get('MYSQL_PASSWORD'),
         host=os.environ.get('MYSQL_HOSTNAME'),
-        port=int(os.environ.get('MYSQL_PORT')),
+        # todo: docker環境外ではコメントを外す
+        # port=int(os.environ.get('MYSQL_PORT')),
         db=os.environ.get('MYSQL_DATABASE'),
         charset=('utf8'),
       )
